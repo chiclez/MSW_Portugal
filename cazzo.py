@@ -216,6 +216,57 @@ def get_coord(y, z, j_ts, l_inc):
 
     return ts_coord, inc_coord, rest_mun, links_ts_coord, links_inc_coord
 
+def get_coord2(y, z, j_ts, l_inc, exist_ts):
+
+    # Read the coordinates list
+    coordinates = pd.read_csv("coordinates.csv")
+
+    # Transfer stations coordinates
+    df_y = pd.DataFrame(y, columns =['mun'])
+    ts_all_coord = pd.merge(coordinates, df_y, how="inner", on=["mun"])
+
+    # Incinerator coordinates
+    df_z = pd.DataFrame(z, columns =['mun']) 
+    inc_coord = pd.merge(coordinates, df_z, how="inner", on=["mun"])
+
+    # All facilities
+    all_fac = pd.merge(df_y, df_z, how = "outer", on = ["mun"])
+    all_fac_coord = pd.merge(all_fac, coordinates, how = "inner", on = ["mun"])
+
+    # Existing ts
+    df_exist_ts = pd.DataFrame(exist_ts, columns =['mun'])
+    ts_exist_coord = pd.merge(coordinates, df_exist_ts, how="inner", on=["mun"])
+
+    ts_new_coord = pd.merge(ts_all_coord, ts_exist_coord, how="left", on=["mun"], indicator= True)
+    ts_coord = ts_new_coord.loc[ts_new_coord["_merge"] == "left_only"]
+    ts_coord = ts_coord.rename(columns = {"lat_x": "lat", "long_x": "long"})
+    ts_coord = ts_coord.drop(columns = ["lat_y", "long_y", "_merge"])
+
+    print(ts_coord)
+
+    # Rest of municipalities: Not TS, not inc
+    centro = pd.merge(coordinates, all_fac, on=['mun'], how='left', indicator=True)
+    rest_mun = centro.loc[centro["_merge"] == "left_only"]
+
+    # Transfer station links dataframe
+    w_jk = pd.DataFrame(j_ts, columns =['ts', 'mun']) 
+
+    w_jk_coord = pd.merge(coordinates, w_jk, how="inner", on=["mun"])
+    links_ts_coord = pd.merge(coordinates, w_jk_coord, how="inner", left_on=["mun"], right_on = ["ts"])
+    links_ts_coord = links_ts_coord.sort_values(by=["ts"], ascending=True)
+    links_ts_coord = links_ts_coord.drop(columns = "ts")    
+    links_ts_coord = links_ts_coord.rename(columns = {"mun_x": "ts", "lat_x": "lat_ts", "long_x": "long_ts", "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
+
+    # Incinerator links dataframe
+    v_jl = pd.DataFrame(l_inc, columns =['inc', 'mun'])
+    v_jl_coord = pd.merge(coordinates, v_jl, how="inner", on=["mun"])
+    links_inc_coord = pd.merge(coordinates, v_jl_coord, how="inner", left_on=["mun"], right_on = ["inc"])
+    links_inc_coord = links_inc_coord.sort_values(by=["inc"], ascending=True)
+    links_inc_coord = links_inc_coord.drop(columns = "inc")    
+    links_inc_coord = links_inc_coord.rename(columns = {"mun_x": "inc", "lat_x": "lat_inc", "long_x": "long_inc", "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
+
+    return ts_coord, ts_exist_coord, inc_coord, rest_mun, links_ts_coord, links_inc_coord
+
 """
 Created on Wed Feb 10 22:13:16 2021
 Modified on Mon Feb 15 15:52:00 2021
@@ -338,7 +389,7 @@ else:
 
 # Sensitivity analysis
 
-# Map
+#Map
 y = []
 z = []
 links_ts = []
@@ -362,4 +413,4 @@ for l in L:
         if(model.v_jl[j, l]() == 1):
             links_inc.append((l, j))
 
-a, b, c, d, e = get_coord(y, z, links_ts, links_inc)
+ts_new, ts_exist, inc, mun, w_jk, v_jl = get_coord2(y, z, links_ts, links_inc, K1)
