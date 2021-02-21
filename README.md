@@ -1,3 +1,12 @@
 # MSW_Portugal
 
-To run this, use the `TAOR.ipnyb` and the data files: data_antunes.xls and coordinates.csv
+Requirements:
+- FICO Xpress
+- Pyomo
+
+Python libraries:
+- folium
+- pandas
+- os
+
+Use the `TAOR.ipnyb` and run all cells
