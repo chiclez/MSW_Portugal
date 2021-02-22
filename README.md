@@ -11,4 +11,4 @@ Python libraries:
 - os
 - pandas
 
-Use the `TAOR.ipnyb` and run all cells
+Use `TAOR.ipnyb` notebook and run all cells
