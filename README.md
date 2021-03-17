@@ -4,7 +4,7 @@ This repository contains the model implementation of Antunes et al (2008) for lo
 
 Requirements:
 - Pyomo
-- FICO Xpress (or another locally installed optimization solver like CPLEX)
+- Internet connection for calling the NEOS server
 
 Python libraries:
 - folium
