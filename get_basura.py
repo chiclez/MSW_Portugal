@@ -15,6 +15,8 @@ import os
 
 # Here are the script functions
 
+# Original function
+
 def get_data(demax, dlmax):
 
     currDir = os.getcwd()
@@ -101,6 +103,99 @@ def get_data(demax, dlmax):
     g_kl_dict = dict(zip(base_keys, g_kl_list))
 
     return q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict
+
+# New function for bringing recent data and recycling data
+
+def get_new_data(demax, dlmax, year):
+
+    currDir = os.getcwd()
+    dataAntunes = os.path.join(currDir, 'data_antunes.xls')
+    new_data = os.path.join(currDir, "data_antunes_new.xls")
+
+    antunesSheet0 = pd.read_excel(dataAntunes, sheet_name=0, header = 1)
+    antunesSheet1 = pd.read_excel(dataAntunes, sheet_name=1, header = 2)
+    antunesSheet2 = pd.read_excel(dataAntunes, sheet_name=2, header = 2)
+    antunesSheet4 = pd.read_excel(dataAntunes, sheet_name=4, header = None)
+
+    municipalities = antunesSheet0.copy()
+    municipalities = municipalities.drop(columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", "Pop 2001", "ET exist.", "ET assign."])
+    
+    # New data
+    waste_df = pd.read_excel(new_data, sheet_name=0, header = 1)
+    q_j_init = waste_df.drop(columns = ["ORD_COD", "Concelho", "Q (ton/dia)", "Q_2001", "Pop 2001", "Q_2015", "Pop_2015", "ET exist.", "ET assign."])
+
+    distmatrix1 = antunesSheet1.copy()
+    d_jk_d_jl_init = distmatrix1.drop(columns = ["Unnamed: 0"])
+    d_jk_d_jl_init.columns = list(range(0, 36))
+
+    distmatrix2 = antunesSheet2.copy()
+    d_kl_init = distmatrix2.drop(columns = ["Unnamed: 0"])
+
+    w_jk0_init = antunesSheet4.copy()
+
+    # Create f_jk_f_jl matrices: 
+    # If the distances between municipalities and transfer stations  d_jk <= demax or w_jk =1, then 1. Else, 0.
+    f_jk_f_jl_init = d_jk_d_jl_init.copy()
+    w_jk0_init.sort_index(inplace=True) == d_jk_d_jl_init.sort_index(inplace = True)
+
+    f_jk_f_jl_init[(f_jk_f_jl_init <= demax) | (w_jk0_init == 1)] = 1
+    f_jk_f_jl_init[f_jk_f_jl_init != 1]= 0
+    f_jk_f_jl_init = f_jk_f_jl_init.astype(int)
+
+    # Take the transposed matrix instead as wjk0 an f_jk_f_jl are not symmetric 
+    w_jk0_init = w_jk0_init.T
+    f_jk_f_jl_init = f_jk_f_jl_init.T
+
+    # Create g_kl matrix: 
+    # If the distances between transfer stations to incinerator d_kl <= dlmax, then 1. Else, 0.
+    g_kl_init = d_kl_init.copy()
+   
+    g_kl_init = g_kl_init.where(d_kl_init > dlmax, 1)
+    g_kl_init[g_kl_init != 1] = 0
+    g_kl_init = g_kl_init.astype(int)
+
+    # Create temp dictionaries
+    q_j_init_dict = q_j_init.to_dict(orient = "list")
+    d_jk_d_jl_init_dict = d_jk_d_jl_init.to_dict(orient = "list")
+    d_kl_init_dict = d_kl_init.to_dict(orient = "list")
+    w_jk0_init_dict = w_jk0_init.to_dict(orient = "list")
+    f_jk_f_jl_init_dict = f_jk_f_jl_init.to_dict(orient = "list")
+    g_kl_init_dict = g_kl_init.to_dict(orient = "list")
+
+    # Get the base_keys for the dictionaries
+    mun_list = municipalities.squeeze().to_list()
+    base_keys = [(i, j) for i in mun_list for j in mun_list]
+
+    # Get the matrix values 
+    q_j = [value for key, value in q_j_init_dict.items()]
+    q_j_list = [j for i in q_j for j in i]
+
+    d_jk_d_jl = [value for key, value in d_jk_d_jl_init_dict.items()]
+    d_jk_d_jl_list = [j for i in d_jk_d_jl for j in i]
+
+    d_kl = [value for key, value in d_kl_init_dict.items()]
+    d_kl_list = [j for i in d_kl for j in i]
+
+    w_jk0 = [value for key, value in w_jk0_init_dict.items()]
+    w_jk0_list = [j for i in w_jk0 for j in i]
+
+    f_jk_f_jl = [value for key, value in f_jk_f_jl_init_dict.items()]
+    f_jk_f_jl_list = [j for i in f_jk_f_jl for j in i]
+
+    g_kl = [value for key, value in g_kl_init_dict.items()]
+    g_kl_list = [j for i in g_kl for j in i]
+
+    # create final dictionaries
+    q_j_dict = dict(zip(mun_list, q_j_list))
+    d_jk_d_jl_dict = dict(zip(base_keys, d_jk_d_jl_list))
+    d_kl_dict = dict(zip(base_keys, d_kl_list))
+    w_jk0_dict = dict(zip(base_keys, w_jk0_list))
+    f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
+    g_kl_dict = dict(zip(base_keys, g_kl_list))
+
+    return q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict
+
+# Common functions
 
 def get_coord(y, z, j_ts, l_inc, exist_ts):
 
