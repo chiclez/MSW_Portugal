@@ -255,6 +255,11 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
     links_inc_coord = links_inc_coord.rename(
         columns = {"mun_x": "inc", "lat_x": "lat_inc", "long_x": "long_inc", "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
 
+    # Indicate type of facility
+    ts_new_coord["type"] = "ts_new"
+    ts_exist_coord["type"] = "ts_existing"
+    inc_coord["type"] = "incinerator"
+
     return ts_new_coord, ts_exist_coord, inc_coord, rest_mun, links_ts_coord, links_inc_coord
 
 def create_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
