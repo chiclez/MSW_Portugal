@@ -11,5 +11,6 @@ Python libraries:
 - geopandas
 - os
 - pandas
+- shapely
 
 Use `TAOR.ipnyb` notebook and run all cells

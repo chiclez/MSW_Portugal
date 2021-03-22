@@ -6,11 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import folium
+import geopandas as gp
+from shapely.geometry import Point, Polygon, LineString
 
 # Misc libraries
 import os
-
-# Here are the script functions
 
 # Original function
 
@@ -26,11 +26,13 @@ def get_data(demax, dlmax):
 
     municipalities = antunesSheet0.copy()
     municipalities = municipalities.drop(
-        columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", "Pop 2001", "ET exist.", "ET assign."])
+        columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", 
+        "Pop 2001", "ET exist.", "ET assign."])
 
     q_j_init = antunesSheet0.copy()
     q_j_init = q_j_init.drop(
-        columns = ["ORD_COD", "Concelho", "Q (ton/dia)", "Pop 2001", "ET exist.", "ET assign."])
+        columns = ["ORD_COD", "Concelho", "Q (ton/dia)", 
+        "Pop 2001", "ET exist.", "ET assign."])
 
     distmatrix1 = antunesSheet1.copy()
     d_jk_d_jl_init = distmatrix1.drop(columns = ["Unnamed: 0"])
@@ -120,12 +122,14 @@ def get_new_data(demax, dlmax, year):
 
     municipalities = antunesSheet0.copy()
     municipalities = municipalities.drop(
-        columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", "Pop 2001", "ET exist.", "ET assign."])
+        columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", 
+        "Pop 2001", "ET exist.", "ET assign."])
     
     # New data
     waste_df = pd.read_excel(new_data, sheet_name=0, header = 1)
     q_j_init = waste_df.drop(
-        columns = ["ORD_COD", "Concelho", "Q (ton/dia)", "Q_2001", "Pop 2001", "Q_2015", "Pop_2015", "ET exist.", "ET assign."])
+        columns = ["ORD_COD", "Concelho", "Q (ton/dia)", "Q_2001", 
+        "Pop 2001", "Q_2015", "Pop_2015", "ET exist.", "ET assign."])
 
     distmatrix1 = antunesSheet1.copy()
     d_jk_d_jl_init = distmatrix1.drop(columns = ["Unnamed: 0"])
@@ -262,7 +266,7 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
 
     return ts_new_coord, ts_exist_coord, inc_coord, rest_mun, links_ts_coord, links_inc_coord
 
-def create_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
+def create_folium_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
 
     # Create a map of the Centro region of Portugal
     centro_coord = [40.784142221076074, -8.12884084353569]
@@ -317,3 +321,69 @@ def create_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
 
     # Return the map
     return portugal_map
+
+def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
+
+    # Load results data into a single dataframe
+    results_df = pd.concat([ts_new, ts_exist, inc], axis = 0)
+    w_jk = w_jk.rename(columns= {"ts": "fac", "lat_ts": "lat_fac", 
+    "long_ts": "long_fac"})
+    w_jk["type"] = "ts"
+    v_jl = v_jl.rename(columns= {"inc": "fac", "lat_inc": "lat_fac", 
+    "long_inc": "long_fac"})
+    v_jl["type"] = "incinerator"
+    links_df = w_jk.append(v_jl)
+
+    # All municipalities in normal case
+
+    J = ['Agueda', 'Albergaria-a-Velha', 'Anadia', 'Arouca', 'Aveiro', 
+    'Estarreja', 'Ilhavo', 'Mealhada', 'Murtosa', 'Oliveira de Azemeis', 
+    'Oliveira do Bairro', 'Ovar', 'Sao Joao da Madeira', 'Sever do Vouga', 
+    'Vagos', 'Vale de Cambra', 'Arganil', 'Cantanhede', 'Coimbra', 
+    'Condeixa-a-Nova', 'Figueira da Foz', 'Gois', 'Lousa', 'Mira', 
+    'Miranda do Corvo', 'Montemor-o-Velho', 'Pampilhosa da Serra', 'Penacova', 
+    'Penela', 'Soure', 'Vila Nova Poiares', 'Alvaiazere', 'Ansiao', 
+    'Castanheira de Pera', 'Figueiro dos Vinhos', 'Pedrogao Grande']
+
+    # Geopandas visualization
+    shape_files = os.path.join(os.getcwd(), "Shapefiles")
+
+    # Municipalities shapefiles
+    mun = gp.read_file(os.path.join(shape_files, "ersucconc.shp"))
+    topo = gp.read_file(os.path.join(shape_files, "ersucconc_topo.shp"))
+    topo = topo.sort_values(by = "ORD_COD")
+    topo["municipality"] = J
+
+    # Get all facilities geometries from shapefiles and convert to GeoDataFrame
+    all_facs = pd.merge(results_df, topo, left_on="mun", 
+    right_on = "municipality", how = "inner")
+    all_facs = gp.GeoDataFrame(all_facs)
+
+    # Get all links points
+    links_tmp2 = pd.merge(links_df, topo, left_on="mun", 
+    right_on="municipality")
+    links_tmp2 = pd.merge(links_tmp2, topo, left_on="fac", 
+    right_on = "municipality")
+
+    # Create a list that contains the linestrings for all link ends
+    links_list = []
+
+    for i in range(0, links_tmp2.shape[0]):
+        links_list.append(
+            LineString(
+                [Point(links_tmp2.X_COORD_x[i], links_tmp2.Y_COORD_x[i]), 
+                Point(links_tmp2.X_COORD_y[i], links_tmp2.Y_COORD_y[i])]))
+
+    links_gp = gp.GeoDataFrame(list(range(0,36)), geometry = links_list)
+
+    # Display geopandas plot
+    fig,ax = plt.subplots(figsize = (10,10))
+    mun.plot(ax =ax, alpha=0.5, edgecolor='k')
+    topo.plot(ax = ax, markersize=10, color = "black", marker = "o", label = "Municipalities")
+    all_facs[all_facs["type"] == "incinerator"].plot(ax = ax, markersize=35, color = "red", marker = "*", label = "Incinerator")
+    all_facs[all_facs["type"] == "ts_new"].plot(ax = ax, markersize=35, color = "blue", marker = "^", label = "New transfer station")
+    all_facs[all_facs["type"] == "ts_existing"].plot(ax = ax, markersize=35, color = "purple", marker = "^", label = "Existing transfer station")
+    links_gp.plot(ax =ax, alpha = 0.5, color='green')
+    plt.legend(prop = {'size': 10}, loc = "lower right")
+
+    return None
