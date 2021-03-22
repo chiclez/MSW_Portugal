@@ -1,33 +1,6 @@
 /.c9
 /.vscode
-/articles
-/assignment
-/data
-/data_antunes_manina.xls
-/dat_export.py
-/distmatrix1.csv
-/distmatrix1.dat
-/distmatrix1_1.csv
-/distmatrix2.csv
-/f_jk.csv
-/f_jk_orig.csv
-/f_jk_test.csv
-/gantt.JPG
-/gantt2.JPG
-/gantt3.JPG
-/g_kl.csv
-/g_kl_orig.csv
-/g_kl_test.csv
-/init_file.dat
-/k_1.csv
-/MATH11183 - Course organisation.pdf
-/MATH11183 - Week 1 - Part 1.pdf
-/MATH11183 - Week 1 - Part 2.pdf
-/MATH11183 - Week 2.pdf
-/MATH11183 - Week 3(1).pdf
-/MATH11183 - Week 4.pdf
-/MATH11183 - Week 5.pdf
-/Meeting notes with Dr Antunes.docx
+
 /municipalities.csv
 /out
 /param_grid.pkl
@@ -51,20 +24,6 @@
 /Versão Definitiva-Inês Penacho-21327009-MGA.pdf
 /w_jk0.csv
 /__pycache__
-cazzo.py
-analysis.xlsx
-legend_h.JPG
-legend.JPG
-orig_sol_21feb.JPG
-new_sol_21feb.JPG
-sensitivity_analysis_notes7.pdf
-TAOR_mid_report.pdf
-cazzo.py
-cazzo.py
-TAORFacilityLayoutLectures.pdf
-TAORFacilityLocationWLPLectureSlides(1).pdf
-MATH11183 - Week 6.pdf
-new_data_ine.csv
 ~$population_2015.xlsx
 new_waste_data.xls
 population_2016.xlsx
@@ -75,8 +34,6 @@ population_unformatted.xlsx
 population.xlsx
 population_2015.xlsx
 all_waste_data.xls
-TAORFacilityLayoutLectureSlides(1).pdf
-TAORFacilityLocationContinuousLocationLectureSlides.pdf
 recycling_2013.xls
 recycling_2014.xls
 recycling_2019.xls
@@ -84,6 +41,4 @@ recycling_total_2019.xlsx
 taor_17032021.zip
 W4uJSf_pRxj5AFThL8XiOGHPsCcsdpRrW-Vq3Kpu_82362.xls
 ~$population.xlsx
-proj-datumgrid-europe-1.5.zip
-Portugal_shapefile.zip
-PRT_adm.zip
+data_antunes_manina.xls
