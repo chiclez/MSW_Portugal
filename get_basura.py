@@ -12,8 +12,7 @@ from shapely.geometry import Point, Polygon, LineString
 # Misc libraries
 import os
 
-curr_dir = os.getcwd()
-data_dir = os.path.join(curr_dir, "data")
+data_dir = os.path.join(os.getcwd(), "data")
 
 # Original function
 
@@ -382,10 +381,18 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
     # Display geopandas plot
     fig,ax = plt.subplots(figsize = (10,10))
     mun.plot(ax =ax, alpha=0.5, edgecolor='k')
-    topo.plot(ax = ax, markersize=10, color = "black", marker = "o", label = "Municipalities")
-    all_facs[all_facs["type"] == "incinerator"].plot(ax = ax, markersize=35, color = "red", marker = "*", label = "Incinerator")
-    all_facs[all_facs["type"] == "ts_new"].plot(ax = ax, markersize=35, color = "blue", marker = "^", label = "New transfer station")
-    all_facs[all_facs["type"] == "ts_existing"].plot(ax = ax, markersize=35, color = "purple", marker = "^", label = "Existing transfer station")
+    topo.plot(ax = ax, markersize=10, color = "black", marker = "o", 
+    label = "Municipalities")
+
+    all_facs[all_facs["type"] == "incinerator"].plot(ax = ax, markersize=35, 
+    color = "red", marker = "*", label = "Incinerator")
+
+    all_facs[all_facs["type"] == "ts_new"].plot(ax = ax, markersize=35, 
+    color = "blue", marker = "^", label = "New transfer station")
+
+    all_facs[all_facs["type"] == "ts_existing"].plot(ax = ax, markersize=35, 
+    color = "purple", marker = "^", label = "Existing transfer station")
+    
     links_gp.plot(ax =ax, alpha = 0.5, color='green')
     plt.legend(prop = {'size': 10}, loc = "lower right")
 
