@@ -8,6 +8,7 @@ Requirements:
 
 Python libraries:
 - folium
+- geopandas
 - os
 - pandas
 
