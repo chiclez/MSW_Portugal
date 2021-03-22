@@ -12,12 +12,14 @@ from shapely.geometry import Point, Polygon, LineString
 # Misc libraries
 import os
 
+curr_dir = os.getcwd()
+data_dir = os.path.join(curr_dir, "data")
+
 # Original function
 
 def get_data(demax, dlmax):
 
-    currDir = os.getcwd()
-    dataAntunes = os.path.join(currDir, 'data_antunes.xls')
+    dataAntunes = os.path.join(data_dir, 'data_antunes.xls')
 
     antunesSheet0 = pd.read_excel(dataAntunes, sheet_name=0, header = 1)
     antunesSheet1 = pd.read_excel(dataAntunes, sheet_name=1, header = 2)
@@ -111,9 +113,8 @@ def get_data(demax, dlmax):
 
 def get_new_data(demax, dlmax, year):
 
-    currDir = os.getcwd()
-    dataAntunes = os.path.join(currDir, 'data_antunes.xls')
-    new_data = os.path.join(currDir, "data_antunes_new.xls")
+    dataAntunes = os.path.join(data_dir, 'data_antunes.xls')
+    new_data = os.path.join(data_dir, "data_antunes_new.xls")
 
     antunesSheet0 = pd.read_excel(dataAntunes, sheet_name=0, header = 1)
     antunesSheet1 = pd.read_excel(dataAntunes, sheet_name=1, header = 2)
@@ -209,7 +210,7 @@ def get_new_data(demax, dlmax, year):
 def get_coord(y, z, j_ts, l_inc, exist_ts):
 
     # Read the coordinates list
-    coordinates = pd.read_csv("coordinates.csv")
+    coordinates = pd.read_csv(os.path.join(data_dir, "coordinates.csv"))
 
     # Transfer stations coordinates
     df_y = pd.DataFrame(y, columns =['mun'])
@@ -247,7 +248,8 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
     links_ts_coord = links_ts_coord.sort_values(by=["ts"], ascending=True)
     links_ts_coord = links_ts_coord.drop(columns = "ts")    
     links_ts_coord = links_ts_coord.rename(
-        columns = {"mun_x": "ts", "lat_x": "lat_ts", "long_x": "long_ts", "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
+        columns = {"mun_x": "ts", "lat_x": "lat_ts", "long_x": "long_ts", 
+        "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
 
     # Incinerator links dataframe
     v_jl = pd.DataFrame(l_inc, columns =['inc', 'mun'])
@@ -257,7 +259,8 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
     links_inc_coord = links_inc_coord.sort_values(by=["inc"], ascending=True)
     links_inc_coord = links_inc_coord.drop(columns = "inc")    
     links_inc_coord = links_inc_coord.rename(
-        columns = {"mun_x": "inc", "lat_x": "lat_inc", "long_x": "long_inc", "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
+        columns = {"mun_x": "inc", "lat_x": "lat_inc", "long_x": "long_inc", 
+        "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
 
     # Indicate type of facility
     ts_new_coord["type"] = "ts_new"
