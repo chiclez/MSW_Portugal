@@ -12,37 +12,45 @@ from shapely.geometry import Point, Polygon, LineString
 # Misc libraries
 import os
 
+# Key takeaways
+
+# Get yourself in the data directory
 data_dir = os.path.join(os.getcwd(), "data")
 
-# Original function
+# All municipalities in normal case
+muns = ['Agueda', 'Albergaria-a-Velha', 'Anadia', 'Arouca', 'Aveiro', 
+    'Estarreja', 'Ilhavo', 'Mealhada', 'Murtosa', 'Oliveira de Azemeis', 
+    'Oliveira do Bairro', 'Ovar', 'Sao Joao da Madeira', 'Sever do Vouga', 
+    'Vagos', 'Vale de Cambra', 'Arganil', 'Cantanhede', 'Coimbra', 
+    'Condeixa-a-Nova', 'Figueira da Foz', 'Gois', 'Lousa', 'Mira', 
+    'Miranda do Corvo', 'Montemor-o-Velho', 'Pampilhosa da Serra', 'Penacova', 
+    'Penela', 'Soure', 'Vila Nova Poiares', 'Alvaiazere', 'Ansiao', 
+    'Castanheira de Pera', 'Figueiro dos Vinhos', 'Pedrogao Grande']
+
+# Functions
+
+# Original function for Antunes et al (2001) model
 
 def get_data(demax, dlmax):
 
-    dataAntunes = os.path.join(data_dir, 'data_antunes.xls')
+    data_sheet = os.path.join(data_dir, 'data.xls')
 
-    antunesSheet0 = pd.read_excel(dataAntunes, sheet_name=0, header = 1)
-    antunesSheet1 = pd.read_excel(dataAntunes, sheet_name=1, header = 2)
-    antunesSheet2 = pd.read_excel(dataAntunes, sheet_name=2, header = 2)
-    antunesSheet4 = pd.read_excel(dataAntunes, sheet_name=4, header = None)
+    data_2001 = pd.read_excel(data_sheet, sheet_name=0, header = 1)
+    distance_jk_sheet = pd.read_excel(data_sheet, sheet_name=1, header = 2)
+    distance_kl_sheet = pd.read_excel(data_sheet, sheet_name=2, header = 2)
+    w_jk0_sheet = pd.read_excel(data_sheet, sheet_name=4, header = None)
 
-    municipalities = antunesSheet0.copy()
-    municipalities = municipalities.drop(
-        columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", 
-        "Pop 2001", "ET exist.", "ET assign."])
+    q_j_init = data_2001.copy()
+    q_j_init = q_j_init[["Q_2001"]]
 
-    q_j_init = antunesSheet0.copy()
-    q_j_init = q_j_init.drop(
-        columns = ["ORD_COD", "Concelho", "Q (ton/dia)", 
-        "Pop 2001", "ET exist.", "ET assign."])
-
-    distmatrix1 = antunesSheet1.copy()
+    distmatrix1 = distance_jk_sheet.copy()
     d_jk_d_jl_init = distmatrix1.drop(columns = ["Unnamed: 0"])
     d_jk_d_jl_init.columns = list(range(0, 36))
 
-    distmatrix2 = antunesSheet2.copy()
+    distmatrix2 = distance_kl_sheet.copy()
     d_kl_init = distmatrix2.drop(columns = ["Unnamed: 0"])
 
-    w_jk0_init = antunesSheet4.copy()
+    w_jk0_init = w_jk0_sheet.copy()
 
     # Create f_jk_f_jl matrices: 
     # If the distances between municipalities and transfer stations  
@@ -54,7 +62,7 @@ def get_data(demax, dlmax):
     f_jk_f_jl_init[f_jk_f_jl_init != 1]= 0
     f_jk_f_jl_init = f_jk_f_jl_init.astype(int)
 
-    # Take the transposed matrix instead as wjk0 an f_jk_f_jl are not symmetric 
+    # Take the transposed matrix. wjk0 and f_jk_f_jl are not symmetric 
     w_jk0_init = w_jk0_init.T
     f_jk_f_jl_init = f_jk_f_jl_init.T
 
@@ -76,8 +84,7 @@ def get_data(demax, dlmax):
     g_kl_init_dict = g_kl_init.to_dict(orient = "list")
 
     # Get the base_keys for the dictionaries
-    mun_list = municipalities.squeeze().to_list()
-    base_keys = [(i, j) for i in mun_list for j in mun_list]
+    base_keys = [(i, j) for i in muns for j in muns]
 
     # Get the matrix values 
     q_j = [value for key, value in q_j_init_dict.items()]
@@ -99,46 +106,52 @@ def get_data(demax, dlmax):
     g_kl_list = [j for i in g_kl for j in i]
 
     # create final dictionaries
-    q_j_dict = dict(zip(mun_list, q_j_list))
+    q_j_dict = dict(zip(muns, q_j_list))
     d_jk_d_jl_dict = dict(zip(base_keys, d_jk_d_jl_list))
     d_kl_dict = dict(zip(base_keys, d_kl_list))
     w_jk0_dict = dict(zip(base_keys, w_jk0_list))
     f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
     g_kl_dict = dict(zip(base_keys, g_kl_list))
 
-    return q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict
+    basura = [q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, 
+                f_jk_f_jl_dict, g_kl_dict]
 
-# New function for bringing recent data and recycling data
+    return basura
 
-def get_new_data(demax, dlmax, year):
+# Function for using data from 2019 and recycling data
 
-    dataAntunes = os.path.join(data_dir, 'data_antunes.xls')
-    new_data = os.path.join(data_dir, "data_antunes_new.xls")
+def get_new_data(demax, dlmax):
 
-    antunesSheet0 = pd.read_excel(dataAntunes, sheet_name=0, header = 1)
-    antunesSheet1 = pd.read_excel(dataAntunes, sheet_name=1, header = 2)
-    antunesSheet2 = pd.read_excel(dataAntunes, sheet_name=2, header = 2)
-    antunesSheet4 = pd.read_excel(dataAntunes, sheet_name=4, header = None)
+    data_sheet = os.path.join(data_dir, "data.xls")
 
-    municipalities = antunesSheet0.copy()
-    municipalities = municipalities.drop(
-        columns = ["ORD_COD", "Q (ton/dia)", "Q (ton/ano)", 
-        "Pop 2001", "ET exist.", "ET assign."])
+    distance_jk_sheet = pd.read_excel(data_sheet, sheet_name=1, header = 2)
+    distance_kl_sheet = pd.read_excel(data_sheet, sheet_name=2, header = 2)
+    w_jk0_sheet = pd.read_excel(data_sheet, sheet_name=4, header = None)
+    data_2019 = pd.read_excel(data_sheet, sheet_name=7, header = 1)
     
-    # New data
-    waste_df = pd.read_excel(new_data, sheet_name=0, header = 1)
-    q_j_init = waste_df.drop(
-        columns = ["ORD_COD", "Concelho", "Q (ton/dia)", "Q_2001", 
-        "Pop 2001", "Q_2015", "Pop_2015", "ET exist.", "ET assign."])
+    # Non-recyclable waste for 2019
+    q_j_init = data_2019[["q_j_2019"]]
 
-    distmatrix1 = antunesSheet1.copy()
+    # Total recyclable for 2019
+    q_r_init = data_2019[["q_r"]]
+
+    # Recycling materials
+    q_paper_init = data_2019[["Paper"]]
+    q_plastic_init = data_2019[["Plastic"]]
+    q_metals_init = data_2019[["Metals"]]
+    q_glass_init = data_2019[["Glass"]]
+    q_bio_init = data_2019[["Biodegradable"]]
+
+    # Distance matrices
+    distmatrix1 = distance_jk_sheet.copy()
     d_jk_d_jl_init = distmatrix1.drop(columns = ["Unnamed: 0"])
     d_jk_d_jl_init.columns = list(range(0, 36))
 
-    distmatrix2 = antunesSheet2.copy()
+    distmatrix2 = distance_kl_sheet.copy()
     d_kl_init = distmatrix2.drop(columns = ["Unnamed: 0"])
 
-    w_jk0_init = antunesSheet4.copy()
+    # Existing transfer stations links
+    w_jk0_init = w_jk0_sheet.copy()
 
     # Create f_jk_f_jl matrices: 
     # If the distances between municipalities and transfer stations 
@@ -165,6 +178,13 @@ def get_new_data(demax, dlmax, year):
 
     # Create temp dictionaries
     q_j_init_dict = q_j_init.to_dict(orient = "list")
+    q_r_init_dict = q_r_init.to_dict(orient = "list")
+    q_paper_init_dict = q_paper_init.to_dict(orient = "list")
+    q_plastic_init_dict = q_plastic_init.to_dict(orient = "list")
+    q_metals_init_dict = q_metals_init.to_dict(orient = "list")
+    q_glass_init_dict = q_glass_init.to_dict(orient = "list")    
+    q_bio_init_dict = q_bio_init.to_dict(orient = "list")
+
     d_jk_d_jl_init_dict = d_jk_d_jl_init.to_dict(orient = "list")
     d_kl_init_dict = d_kl_init.to_dict(orient = "list")
     w_jk0_init_dict = w_jk0_init.to_dict(orient = "list")
@@ -172,12 +192,29 @@ def get_new_data(demax, dlmax, year):
     g_kl_init_dict = g_kl_init.to_dict(orient = "list")
 
     # Get the base_keys for the dictionaries
-    mun_list = municipalities.squeeze().to_list()
-    base_keys = [(i, j) for i in mun_list for j in mun_list]
+    base_keys = [(i, j) for i in muns for j in muns]
 
     # Get the matrix values 
     q_j = [value for key, value in q_j_init_dict.items()]
     q_j_list = [j for i in q_j for j in i]
+
+    q_r = [value for key, value in q_r_init_dict.items()]
+    q_r_list = [j for i in q_r for j in i]
+
+    q_paper = [value for key, value in q_paper_init_dict.items()]
+    q_paper_list = [j for i in q_paper for j in i]
+
+    q_plastic = [value for key, value in q_plastic_init_dict.items()]
+    q_plastic_list = [j for i in q_plastic for j in i]
+
+    q_metals = [value for key, value in q_metals_init_dict.items()]
+    q_metals_list = [j for i in q_metals for j in i]
+
+    q_glass = [value for key, value in q_glass_init_dict.items()]
+    q_glass_list = [j for i in q_glass for j in i]
+
+    q_bio = [value for key, value in q_bio_init_dict.items()]
+    q_bio_list = [j for i in q_bio for j in i]
 
     d_jk_d_jl = [value for key, value in d_jk_d_jl_init_dict.items()]
     d_jk_d_jl_list = [j for i in d_jk_d_jl for j in i]
@@ -195,14 +232,28 @@ def get_new_data(demax, dlmax, year):
     g_kl_list = [j for i in g_kl for j in i]
 
     # create final dictionaries
-    q_j_dict = dict(zip(mun_list, q_j_list))
+
+    # Waste
+    q_j_dict = dict(zip(muns, q_j_list))
+    q_r_dict = dict(zip(muns, q_r_list))
+    q_paper_dict = dict(zip(muns, q_paper_list))
+    q_plastic_dict = dict(zip(muns, q_plastic_list))
+    q_metals_dict = dict(zip(muns, q_metals_list))
+    q_glass_dict = dict(zip(muns, q_glass_list))
+    q_bio_dict = dict(zip(muns, q_bio_list))
+
+    # distances and existing links
     d_jk_d_jl_dict = dict(zip(base_keys, d_jk_d_jl_list))
     d_kl_dict = dict(zip(base_keys, d_kl_list))
     w_jk0_dict = dict(zip(base_keys, w_jk0_list))
     f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
     g_kl_dict = dict(zip(base_keys, g_kl_list))
 
-    return q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict
+    new_basura = [q_j_dict, q_r_dict, q_paper_dict, q_plastic_dict, 
+                    q_metals_dict, q_glass_dict, q_bio_dict, d_jk_d_jl_dict, 
+                    d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict]
+
+    return new_basura
 
 # Common functions
 
@@ -266,7 +317,10 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
     ts_exist_coord["type"] = "ts_existing"
     inc_coord["type"] = "incinerator"
 
-    return ts_new_coord, ts_exist_coord, inc_coord, rest_mun, links_ts_coord, links_inc_coord
+    coordinates_results = [ts_new_coord, ts_exist_coord, inc_coord, rest_mun, 
+                            links_ts_coord, links_inc_coord]
+
+    return coordinates_results
 
 def create_folium_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
 
@@ -338,15 +392,6 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
 
     # All municipalities in normal case
 
-    J = ['Agueda', 'Albergaria-a-Velha', 'Anadia', 'Arouca', 'Aveiro', 
-    'Estarreja', 'Ilhavo', 'Mealhada', 'Murtosa', 'Oliveira de Azemeis', 
-    'Oliveira do Bairro', 'Ovar', 'Sao Joao da Madeira', 'Sever do Vouga', 
-    'Vagos', 'Vale de Cambra', 'Arganil', 'Cantanhede', 'Coimbra', 
-    'Condeixa-a-Nova', 'Figueira da Foz', 'Gois', 'Lousa', 'Mira', 
-    'Miranda do Corvo', 'Montemor-o-Velho', 'Pampilhosa da Serra', 'Penacova', 
-    'Penela', 'Soure', 'Vila Nova Poiares', 'Alvaiazere', 'Ansiao', 
-    'Castanheira de Pera', 'Figueiro dos Vinhos', 'Pedrogao Grande']
-
     # Geopandas visualization
     shape_files = os.path.join(os.getcwd(), "Shapefiles")
 
@@ -354,7 +399,7 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
     mun = gp.read_file(os.path.join(shape_files, "ersucconc.shp"))
     topo = gp.read_file(os.path.join(shape_files, "ersucconc_topo.shp"))
     topo = topo.sort_values(by = "ORD_COD")
-    topo["municipality"] = J
+    topo["municipality"] = muns
 
     # Get all facilities geometries from shapefiles and convert to GeoDataFrame
     all_facs = pd.merge(results_df, topo, left_on="mun", 
@@ -379,7 +424,7 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
     links_gp = gp.GeoDataFrame(list(range(0,36)), geometry = links_list)
 
     # Display geopandas plot
-    fig,ax = plt.subplots(figsize = (10,10))
+    fig, ax = plt.subplots(figsize = (10,10))
     mun.plot(ax =ax, alpha=0.5, edgecolor='k')
     topo.plot(ax = ax, markersize=10, color = "black", marker = "o", 
     label = "Municipalities")
