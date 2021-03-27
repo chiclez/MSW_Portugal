@@ -35,12 +35,12 @@ def get_data(demax, dlmax):
 
     data_sheet = os.path.join(data_dir, 'data.xls')
 
-    data_2001 = pd.read_excel(data_sheet, sheet_name=0, header = 1)
+    data_hace_mucho = pd.read_excel(data_sheet, sheet_name=0, header = 1)
     distance_jk_sheet = pd.read_excel(data_sheet, sheet_name=1, header = 2)
     distance_kl_sheet = pd.read_excel(data_sheet, sheet_name=2, header = 2)
     w_jk0_sheet = pd.read_excel(data_sheet, sheet_name=4, header = None)
 
-    q_j_init = data_2001.copy()
+    q_j_init = data_hace_mucho.copy()
     q_j_init = q_j_init[["Q_2001"]]
 
     distmatrix1 = distance_jk_sheet.copy()
@@ -113,10 +113,10 @@ def get_data(demax, dlmax):
     f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
     g_kl_dict = dict(zip(base_keys, g_kl_list))
 
-    basura = [q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, 
+    basura_hace_mucho = [q_j_dict, d_jk_d_jl_dict, d_kl_dict, w_jk0_dict, 
                 f_jk_f_jl_dict, g_kl_dict]
 
-    return basura
+    return basura_hace_mucho
 
 # Function for using data from 2019 and recycling data
 
@@ -141,6 +141,9 @@ def get_new_data(demax, dlmax):
     q_metals_init = data_2019[["Metals"]]
     q_glass_init = data_2019[["Glass"]]
     q_bio_init = data_2019[["Biodegradable"]]
+
+    recycling_mat = ["Paper", "Plastic", "Metals", "Glass", "Biodegradable"]
+    q_r_max_init = data_2019[recycling_mat].T
 
     # Distance matrices
     distmatrix1 = distance_jk_sheet.copy()
@@ -185,6 +188,8 @@ def get_new_data(demax, dlmax):
     q_glass_init_dict = q_glass_init.to_dict(orient = "list")    
     q_bio_init_dict = q_bio_init.to_dict(orient = "list")
 
+    q_r_max_init_dict = q_r_max_init.to_dict(orient = "list")
+
     d_jk_d_jl_init_dict = d_jk_d_jl_init.to_dict(orient = "list")
     d_kl_init_dict = d_kl_init.to_dict(orient = "list")
     w_jk0_init_dict = w_jk0_init.to_dict(orient = "list")
@@ -193,6 +198,7 @@ def get_new_data(demax, dlmax):
 
     # Get the base_keys for the dictionaries
     base_keys = [(i, j) for i in muns for j in muns]
+    recycling_keys = [(i, r) for i in muns for r in recycling_mat]
 
     # Get the matrix values 
     q_j = [value for key, value in q_j_init_dict.items()]
@@ -216,6 +222,9 @@ def get_new_data(demax, dlmax):
     q_bio = [value for key, value in q_bio_init_dict.items()]
     q_bio_list = [j for i in q_bio for j in i]
 
+    q_r_max = [value for key, value in q_r_max_init_dict.items()]
+    q_r_max_list = [j for i in q_r_max for j in i]
+
     d_jk_d_jl = [value for key, value in d_jk_d_jl_init_dict.items()]
     d_jk_d_jl_list = [j for i in d_jk_d_jl for j in i]
 
@@ -236,11 +245,15 @@ def get_new_data(demax, dlmax):
     # Waste
     q_j_dict = dict(zip(muns, q_j_list))
     q_r_dict = dict(zip(muns, q_r_list))
+
     q_paper_dict = dict(zip(muns, q_paper_list))
     q_plastic_dict = dict(zip(muns, q_plastic_list))
     q_metals_dict = dict(zip(muns, q_metals_list))
     q_glass_dict = dict(zip(muns, q_glass_list))
     q_bio_dict = dict(zip(muns, q_bio_list))
+
+    # q_jr
+    q_r_max_dict = dict(zip(recycling_keys, q_r_max_list))
 
     # distances and existing links
     d_jk_d_jl_dict = dict(zip(base_keys, d_jk_d_jl_list))
@@ -249,9 +262,10 @@ def get_new_data(demax, dlmax):
     f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
     g_kl_dict = dict(zip(base_keys, g_kl_list))
 
-    new_basura = [q_j_dict, q_r_dict, q_paper_dict, q_plastic_dict, 
-                    q_metals_dict, q_glass_dict, q_bio_dict, d_jk_d_jl_dict, 
-                    d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict]
+
+    new_basura = [q_j_dict, q_r_dict, q_r_max_dict, q_paper_dict, q_plastic_dict, 
+                     q_metals_dict, q_glass_dict, q_bio_dict, d_jk_d_jl_dict, 
+                     d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict]
 
     return new_basura
 
@@ -442,3 +456,4 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
     plt.legend(prop = {'size': 10}, loc = "lower right")
 
     return None
+
