@@ -189,6 +189,13 @@ def get_new_data(demax, dlmax, drmax):
     g_jk_init[g_jk_init != 1] = 0
     g_jk_init = g_jk_init.astype(int)
 
+    # Create dij matrix with only upper triangle, for linearizing the problem
+    distance_upper_diag = np.triu(d_jk_d_jl_init)
+    d_jk_upper = pd.DataFrame(data = distance_upper_diag, columns = list(range(0, 36)))
+
+    d_jk_bin_array = np.where(distance_upper_diag !=0, 1, distance_upper_diag)
+    d_jk_bin = pd.DataFrame(data = d_jk_bin_array, columns = list(range(0, 36)))
+
     # Create temp dictionaries
     q_j_init_dict = q_j_init.to_dict(orient = "list")
     q_r_init_dict = q_r_init.to_dict(orient = "list")
@@ -206,6 +213,9 @@ def get_new_data(demax, dlmax, drmax):
     f_jk_f_jl_init_dict = f_jk_f_jl_init.to_dict(orient = "list")
     g_kl_init_dict = g_kl_init.to_dict(orient = "list")
     g_jk_init_dict = g_jk_init.to_dict(orient = "list")
+
+    d_jk_upper_init_dict = d_jk_upper.to_dict(orient = "list")
+    d_jk_bin_init_dict = d_jk_bin.to_dict(orient = "list")
 
     # Get the base_keys for the dictionaries
     base_keys = [(i, j) for i in muns for j in muns]
@@ -254,6 +264,12 @@ def get_new_data(demax, dlmax, drmax):
     g_jk = [value for key, value in g_jk_init_dict.items()]
     g_jk_list = [j for i in g_jk for j in i]
 
+    d_jk_tri = [value for key, value in d_jk_upper_init_dict.items()]
+    d_jk_tri_list = [j for i in d_jk_tri for j in i]
+
+    d_jk_bin_split = [value for key, value in d_jk_bin_init_dict.items()]
+    d_jk_bin_list = [j for i in d_jk_bin_split for j in i]
+
     # create final dictionaries
 
     # Waste
@@ -276,10 +292,12 @@ def get_new_data(demax, dlmax, drmax):
     f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
     g_kl_dict = dict(zip(base_keys, g_kl_list))
     g_jk_dict = dict(zip(base_keys, g_jk_list))
-
-
+    d_jk_tri_dict = dict(zip(base_keys, d_jk_tri_list))
+    d_jk_bin_dict = dict(zip(base_keys, d_jk_bin_list))
+    
     new_basura = [q_j_dict, q_r_dict, q_r_max_dict, d_jk_d_jl_dict, d_kl_dict, 
-                    w_jk0_dict, f_jk_f_jl_dict, g_kl_dict, g_jk_dict]
+                    w_jk0_dict, f_jk_f_jl_dict, g_kl_dict, g_jk_dict, 
+                    d_jk_tri_dict, d_jk_bin_dict]
 
     return new_basura
 
@@ -615,161 +633,3 @@ def create_gis_rec(r_centre, u_jk):
     plt.legend(prop = {'size': 10}, loc = "lower right")
 
     return None
-
-
-# #debug pyomo
-# # 
-# # Max distances
-# demax = 25
-# dlmax = 125
-
-# # Bring the data as dictionaries
-# q_j, dist_jk_dist_jl, dist_kl, w_jk0, f_jk_f_jl, g_kl = [i for i in get_data(demax, dlmax)]
-
-# # Parameters
-# c_c = 0.045
-# c_u = 0.128571
-
-# q = sum(q_j.values())
-
-# # s_k = 204400 # original value from Dr Antunes
-# s_k = 182500 # 500 ton/day capacity
-
-# m = 1E6
-
-# # Step 0: Instantiate a model object
-# model = ConcreteModel()
-# model.dual = Suffix(direction=Suffix.IMPORT)
-
-# # Step 1: Define index sets
-# J = list(q_j.keys())
-# K = list(q_j.keys())
-# L = list(q_j.keys())
-# J1 = ["Arouca", "Estarreja", "Oliveira de Azemeis", "Sao Joao da Madeira", "Sever do Vouga", "Gois", "Lousa", "Pampilhosa da Serra", "Penela", "Vila Nova Poiares", "Ansiao", "Castanheira de Pera", "Pedrogao Grande"]
-# K1 = ["Estarreja", "Oliveira de Azemeis", "Sever do Vouga", "Gois", "Pampilhosa da Serra", "Ansiao"]
-
-# # Step 2: Define the decision variables
-# model.w_jk = Var(J, K, within= Binary)
-# model.v_jl = Var(J, L, within=Binary)
-# model.y_k = Var(K, within=Binary)
-# model.z_l = Var(L, within=Binary)
-# model.x_kl = Var(K,L, domain = NonNegativeReals)
-
-# # Step 3: Objective function
-# def obj_rule(model):
-#     return sum( c_u * dist_jk_dist_jl[j,k] * q_j[j] * model.w_jk[j,k] for j in J for k in K)+\
-#         sum( c_u * dist_jk_dist_jl[j,l] * q_j[j] * model.v_jl[j,l] for j in J for l in L)+\
-#         sum( c_c * dist_kl[k,l] * model.x_kl[k,l] for k in K for l in L) #+ sum( m*model.y_k[k] for k in K)
-
-# model.Cost = Objective(rule=obj_rule, sense = minimize)
-
-# # Step 4: Constraints              
-# def rule_1(model,J):
-#     return sum( model.w_jk[J,k] for k in K ) + \
-#            sum( model.v_jl[J,l] for l in L ) == 1 
-    
-# def rule_2(model,K):
-#     return sum( q_j[j]*model.w_jk[j, K] for j in J ) == sum( model.x_kl[K,l] for l in L )  
-    
-# def rule_3(model,J,K):
-#     return model.w_jk[J,K] <= f_jk_f_jl[J,K]*model.y_k[K]
-
-# def rule_4(model,J,L):
-#     return model.v_jl[J,L] <= f_jk_f_jl[J,L]*model.z_l[L]
-   
-# def rule_5(model,K,L):
-#     return model.x_kl[K,L] <= g_kl[K,L]*q*model.z_l[L]
-
-# def rule_6(model,K):
-#     return sum(q_j[j]*model.w_jk[j,K] for j in J)<=s_k*model.y_k[K]
-
-# def rule_7(model):
-#     return sum(model.z_l[l] for l in L)==1
-
-# def rule_8(model, J1, K1):
-#     return model.w_jk[J1,K1] == w_jk0[J1, K1]
-
-# def rule_9(model): #experiment, incinerator not in Agueda
-#     return (model.z_l["Agueda"] == 0)
-
-# def rule_10(model): #experiment, incinerator not in Mealheada
-#     return (model.z_l["Mealhada"] == 0)
-
-# def rule_11(model): #experiment, incinerator not in Anadia
-#     return (model.z_l["Anadia"] == 0)
-
-# def rule_12(model, J1, K1):
-#     return model.y_k[K1] >= w_jk0[J1, K1]
-
-# def rule_13(model):
-#     return sum(model.y_k[k] for k in K) <= 9
-
-# def rule_14(model, J):
-#     return sum(model.w_jk[J, k] for k in K) <= 9
-
-# model.C_1 = Constraint( J, rule=rule_1 )
-# model.C_2 = Constraint( K, rule=rule_2 )
-# model.C_3 = Constraint( J, K, rule=rule_3 )
-# model.C_4 = Constraint( J, L, rule=rule_4 )
-# model.C_5 = Constraint( K, L, rule = rule_5)
-# model.C_6 = Constraint( K, rule = rule_6 )
-# model.C_7 = Constraint( rule = rule_7)
-# model.C_8 = Constraint(J1, K1, rule = rule_8) 
-# #model.C_9 = Constraint( rule = rule_9) # experiment, incinerator not in Agueda
-# #model.C_10 = Constraint( rule = rule_10) # experiment, incinerator not in Mealhada
-# #model.C_11 = Constraint( rule = rule_11) # experiment, incinerator not in Anadia
-# #model.c_12 = Constraint( J1, K1, rule = rule_12) # allow the municipalities to go to other ts
-# model.c_13 = Constraint( rule = rule_13) # limit number of transfer stations without using the m term
-# #model.c_14 = Constraint( J, rule = rule_14) # limit number of municipalities assigned to a ts
-
-# # Call Mosel and solve
-# #results = SolverFactory('amplxpress').solve(model)
-
-# # Call the NEOS server and use CPLEX for solving
-
-# # email address
-# os.environ['NEOS_EMAIL'] = 's2123659@ed.ac.uk'
-
-# solver_manager = SolverManagerFactory('neos')
-# results = solver_manager.solve(model, opt="cplex")
-
-# results.write()
-
-# #data 
-
-# # Fill lists with the optimization results 
-
-# # Transfer stations
-# y = []
-
-# for k in K:
-#     if(model.y_k[k]() == 1):
-#         y.append(k)
-
-# #Incinerator
-# z = []
-
-# for l in L:
-#     if(model.z_l[l]() == 1):
-#         z.append(l)
-
-# # Link between municipalities and transfer stations
-# links_ts = []
-
-# for k in K:
-#     for j in J:
-#         if(model.w_jk[j, k]() == 1):
-#             links_ts.append((k, j))
-
-# # Link between municipalities and the incinerator
-# links_inc = []
-
-# for l in L:
-#     for j in J:
-#         if(model.v_jl[j, l]() == 1):
-#             links_inc.append((l, j))
-
-# # Get the coordinates
-# ts_new, ts_exist, inc, mun, w_jk, v_jl = [i for i in get_coord(y, z, links_ts, links_inc, K1)]
-
-# create_gis(ts_new, ts_exist, inc, w_jk, v_jl)
