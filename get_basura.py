@@ -1,4 +1,4 @@
-# Data libraries
+#Data libraries
 import pandas as pd
 import numpy as np
 
@@ -120,7 +120,7 @@ def get_data(demax, dlmax):
 
 # Function for using data from 2019 and recycling data
 
-def get_new_data(demax, dlmax):
+def get_new_data(demax, dlmax, drmax):
 
     data_sheet = os.path.join(data_dir, "data.xls")
 
@@ -136,13 +136,13 @@ def get_new_data(demax, dlmax):
     q_r_init = data_2019[["q_r"]]
 
     # Recycling materials
-    q_paper_init = data_2019[["Paper"]]
-    q_plastic_init = data_2019[["Plastic"]]
-    q_metals_init = data_2019[["Metals"]]
-    q_glass_init = data_2019[["Glass"]]
-    q_bio_init = data_2019[["Biodegradable"]]
+    # q_paper_init = data_2019[["Paper"]]
+    # q_plastic_init = data_2019[["Plastic"]]
+    # q_metals_init = data_2019[["Metals"]]
+    # q_glass_init = data_2019[["Glass"]]
+    # q_wood_init = data_2019[["Wood"]]
 
-    recycling_mat = ["Paper", "Plastic", "Metals", "Glass", "Biodegradable"]
+    recycling_mat = ["Paper", "Plastic", "Metals", "Glass", "Wood"]
     q_r_max_init = data_2019[recycling_mat].T
 
     # Distance matrices
@@ -179,14 +179,23 @@ def get_new_data(demax, dlmax):
     g_kl_init[g_kl_init != 1] = 0
     g_kl_init = g_kl_init.astype(int)
 
+    # Create h_jk matrix for the recycling centers and municipalities 
+    # If the distances between centers to municipalities 
+    # d_kl <= drmax, then 1. Else, 0.
+    g_jk_init = d_kl_init.copy()
+   
+    g_jk_init = g_jk_init.where(d_kl_init > drmax, 1)
+    g_jk_init[g_jk_init != 1] = 0
+    g_jk_init = g_jk_init.astype(int)
+
     # Create temp dictionaries
     q_j_init_dict = q_j_init.to_dict(orient = "list")
     q_r_init_dict = q_r_init.to_dict(orient = "list")
-    q_paper_init_dict = q_paper_init.to_dict(orient = "list")
-    q_plastic_init_dict = q_plastic_init.to_dict(orient = "list")
-    q_metals_init_dict = q_metals_init.to_dict(orient = "list")
-    q_glass_init_dict = q_glass_init.to_dict(orient = "list")    
-    q_bio_init_dict = q_bio_init.to_dict(orient = "list")
+    # q_paper_init_dict = q_paper_init.to_dict(orient = "list")
+    # q_plastic_init_dict = q_plastic_init.to_dict(orient = "list")
+    # q_metals_init_dict = q_metals_init.to_dict(orient = "list")
+    # q_glass_init_dict = q_glass_init.to_dict(orient = "list")    
+    # q_wood_init_dict = q_wood_init.to_dict(orient = "list")
 
     q_r_max_init_dict = q_r_max_init.to_dict(orient = "list")
 
@@ -195,6 +204,7 @@ def get_new_data(demax, dlmax):
     w_jk0_init_dict = w_jk0_init.to_dict(orient = "list")
     f_jk_f_jl_init_dict = f_jk_f_jl_init.to_dict(orient = "list")
     g_kl_init_dict = g_kl_init.to_dict(orient = "list")
+    g_jk_init_dict = g_jk_init.to_dict(orient = "list")
 
     # Get the base_keys for the dictionaries
     base_keys = [(i, j) for i in muns for j in muns]
@@ -207,20 +217,20 @@ def get_new_data(demax, dlmax):
     q_r = [value for key, value in q_r_init_dict.items()]
     q_r_list = [j for i in q_r for j in i]
 
-    q_paper = [value for key, value in q_paper_init_dict.items()]
-    q_paper_list = [j for i in q_paper for j in i]
+    # q_paper = [value for key, value in q_paper_init_dict.items()]
+    # q_paper_list = [j for i in q_paper for j in i]
 
-    q_plastic = [value for key, value in q_plastic_init_dict.items()]
-    q_plastic_list = [j for i in q_plastic for j in i]
+    #q_plastic = [value for key, value in q_plastic_init_dict.items()]
+    # q_plastic_list = [j for i in q_plastic for j in i]
 
-    q_metals = [value for key, value in q_metals_init_dict.items()]
-    q_metals_list = [j for i in q_metals for j in i]
+    # q_metals = [value for key, value in q_metals_init_dict.items()]
+    # q_metals_list = [j for i in q_metals for j in i]
 
-    q_glass = [value for key, value in q_glass_init_dict.items()]
-    q_glass_list = [j for i in q_glass for j in i]
+    # q_glass = [value for key, value in q_glass_init_dict.items()]
+    # q_glass_list = [j for i in q_glass for j in i]
 
-    q_bio = [value for key, value in q_bio_init_dict.items()]
-    q_bio_list = [j for i in q_bio for j in i]
+    # q_wood = [value for key, value in q_wood_init_dict.items()]
+    # q_wood_list = [j for i in q_wood for j in i]
 
     q_r_max = [value for key, value in q_r_max_init_dict.items()]
     q_r_max_list = [j for i in q_r_max for j in i]
@@ -240,17 +250,20 @@ def get_new_data(demax, dlmax):
     g_kl = [value for key, value in g_kl_init_dict.items()]
     g_kl_list = [j for i in g_kl for j in i]
 
+    g_jk = [value for key, value in g_jk_init_dict.items()]
+    g_jk_list = [j for i in g_jk for j in i]
+
     # create final dictionaries
 
     # Waste
     q_j_dict = dict(zip(muns, q_j_list))
     q_r_dict = dict(zip(muns, q_r_list))
 
-    q_paper_dict = dict(zip(muns, q_paper_list))
-    q_plastic_dict = dict(zip(muns, q_plastic_list))
-    q_metals_dict = dict(zip(muns, q_metals_list))
-    q_glass_dict = dict(zip(muns, q_glass_list))
-    q_bio_dict = dict(zip(muns, q_bio_list))
+    #q_paper_dict = dict(zip(muns, q_paper_list))
+    #q_plastic_dict = dict(zip(muns, q_plastic_list))
+    #q_metals_dict = dict(zip(muns, q_metals_list))
+    #q_glass_dict = dict(zip(muns, q_glass_list))
+    #q_bio_dict = dict(zip(muns, q_bio_list))
 
     # q_jr
     q_r_max_dict = dict(zip(recycling_keys, q_r_max_list))
@@ -261,17 +274,17 @@ def get_new_data(demax, dlmax):
     w_jk0_dict = dict(zip(base_keys, w_jk0_list))
     f_jk_f_jl_dict = dict(zip(base_keys, f_jk_f_jl_list))
     g_kl_dict = dict(zip(base_keys, g_kl_list))
+    g_jk_dict = dict(zip(base_keys, g_jk_list))
 
 
-    new_basura = [q_j_dict, q_r_dict, q_r_max_dict, q_paper_dict, q_plastic_dict, 
-                     q_metals_dict, q_glass_dict, q_bio_dict, d_jk_d_jl_dict, 
-                     d_kl_dict, w_jk0_dict, f_jk_f_jl_dict, g_kl_dict]
+    new_basura = [q_j_dict, q_r_dict, q_r_max_dict, d_jk_d_jl_dict, d_kl_dict, 
+                    w_jk0_dict, f_jk_f_jl_dict, g_kl_dict, g_jk_dict]
 
     return new_basura
 
 # Common functions
 
-def get_coord(y, z, j_ts, l_inc, exist_ts):
+def get_coord(y, z, j_ts, l_inc, exist_ts, x_k = None, j_rec = None):
 
     # Read the coordinates list
     coordinates = pd.read_csv(os.path.join(data_dir, "coordinates.csv"))
@@ -286,6 +299,12 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
 
     # All facilities
     all_fac = pd.merge(df_y, df_z, how = "outer", on = ["mun"])
+
+    # Add recycling centres
+    if x_k:
+        df_x_k = pd.DataFrame(x_k, columns=["mun"])
+        rec_coord = pd.merge(coordinates, df_x_k, how="inner", on=["mun"])
+        all_fac = all_fac.append(df_x_k)
 
     # Existing ts
     df_exist_ts = pd.DataFrame(exist_ts, columns =['mun'])
@@ -326,17 +345,36 @@ def get_coord(y, z, j_ts, l_inc, exist_ts):
         columns = {"mun_x": "inc", "lat_x": "lat_inc", "long_x": "long_inc", 
         "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
 
+    # Recycling centre links dataframe
+    if j_rec:
+
+        u_jk = pd.DataFrame(j_rec, columns =['rec', 'mun'])
+        u_jk_coord = pd.merge(coordinates, u_jk, how="inner", on=["mun"])
+        links_rec_coord = pd.merge(coordinates, u_jk_coord, how="inner", 
+                                    left_on=["mun"], right_on = ["rec"])
+        links_rec_coord = links_rec_coord.sort_values(by=["rec"], ascending=True)
+        links_rec_coord = links_rec_coord.drop(columns = "rec")    
+        links_rec_coord = links_rec_coord.rename(
+        columns = {"mun_x": "rec", "lat_x": "lat_rec", "long_x": "long_rec", 
+        "mun_y": "mun", "lat_y": "lat_mun", "long_y": "long_mun"})
+
     # Indicate type of facility
     ts_new_coord["type"] = "ts_new"
     ts_exist_coord["type"] = "ts_existing"
     inc_coord["type"] = "incinerator"
 
-    coordinates_results = [ts_new_coord, ts_exist_coord, inc_coord, rest_mun, 
+    if x_k:
+        rec_coord["type"] = "rec"
+        coordinates_results = [ts_new_coord, ts_exist_coord, inc_coord, rec_coord,
+                                rest_mun, links_ts_coord, links_inc_coord, 
+                                links_rec_coord]
+    else:
+        coordinates_results = [ts_new_coord, ts_exist_coord, inc_coord, rest_mun, 
                             links_ts_coord, links_inc_coord]
 
     return coordinates_results
 
-def create_folium_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
+def create_folium(ts_new, ts_exist, inc, mun, w_jk, v_jl, r_centre = None, u_jk = None):
 
     # Create a map of the Centro region of Portugal
     centro_coord = [40.784142221076074, -8.12884084353569]
@@ -366,12 +404,25 @@ def create_folium_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
             folium.CircleMarker([lat, lng], radius=6, color='red', fill=True, 
             fill_color='red', fill_opacity=0.7))
 
-    # Add the feature groups to the map
+    # Create Portugal map instance
     portugal_map = folium.Map(location=centro_coord, zoom_start=8)
+
+    # Add the feature groups to the map
     portugal_map.add_child(ts_group)
     portugal_map.add_child(ts_e_group)
     portugal_map.add_child(mun_group)
     portugal_map.add_child(inc_group)
+
+    # Add recycling centres to the feature groups
+    if isinstance(r_centre, pd.DataFrame):
+        rec_group = folium.map.FeatureGroup(name = "Recycling centres")
+        
+        for lat, lng, in zip(r_centre.lat, r_centre.long):
+            rec_group.add_child(
+                folium.CircleMarker([lat, lng], radius=5, color='purple', 
+                fill=True, fill_color='purple', fill_opacity=0.7))
+
+        portugal_map.add_child(rec_group)
 
     # Add a layer control to the map and other tile layer options
     folium.TileLayer('cartodbpositron').add_to(portugal_map)
@@ -389,13 +440,24 @@ def create_folium_map(ts_new, ts_exist, inc, mun, w_jk, v_jl):
     folium.PolyLine(
         v_jl_link, color="darkred", weight=1.5, opacity=1).add_to(portugal_map)
 
+    if isinstance(u_jk, pd.DataFrame):
+        u_jk_link = list(
+        zip(zip(u_jk.lat_rec, u_jk.long_rec), zip(u_jk.lat_mun, u_jk.long_mun)))
+        
+        folium.PolyLine(
+        u_jk_link, color="darkred", weight=1.5, opacity=1).add_to(portugal_map)
+
     # Return the map
     return portugal_map
 
-def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
+def create_gis(ts_new, ts_exist, inc, w_jk, v_jl, r_centre = None, u_jk = None):
 
     # Load results data into a single dataframe
-    results_df = pd.concat([ts_new, ts_exist, inc], axis = 0)
+    if isinstance(r_centre, pd.DataFrame):
+        results_df = pd.concat([ts_new, ts_exist, inc, r_centre], axis = 0)
+    else:    
+        results_df = pd.concat([ts_new, ts_exist, inc], axis = 0)
+    
     w_jk = w_jk.rename(columns= {"ts": "fac", "lat_ts": "lat_fac", 
     "long_ts": "long_fac"})
     w_jk["type"] = "ts"
@@ -404,7 +466,12 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
     v_jl["type"] = "incinerator"
     links_df = w_jk.append(v_jl)
 
-    # All municipalities in normal case
+    # Get the Recycling centres and links information
+    if isinstance(u_jk, pd.DataFrame):
+        u_jk = u_jk.rename(columns= {"rec": "fac", "lat_rec": "lat_fac", 
+                            "long_rec": "long_fac"})
+        u_jk["type"] = "rec"
+        links_df = links_df.append(u_jk)
 
     # Geopandas visualization
     shape_files = os.path.join(os.getcwd(), "Shapefiles")
@@ -435,7 +502,14 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
                 [Point(links_tmp2.X_COORD_x[i], links_tmp2.Y_COORD_x[i]), 
                 Point(links_tmp2.X_COORD_y[i], links_tmp2.Y_COORD_y[i])]))
 
-    links_gp = gp.GeoDataFrame(list(range(0,36)), geometry = links_list)
+    n = w_jk.shape[0] + v_jl.shape[0]
+
+    if isinstance(u_jk, pd.DataFrame):
+        n += u_jk.shape[0]
+    else:
+        n = n
+
+    links_gp = gp.GeoDataFrame(list(range(0, n)), geometry = links_list)
 
     # Display geopandas plot
     fig, ax = plt.subplots(figsize = (10,10))
@@ -451,9 +525,72 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl):
 
     all_facs[all_facs["type"] == "ts_existing"].plot(ax = ax, markersize=35, 
     color = "purple", marker = "^", label = "Existing transfer station")
+
+    if isinstance(r_centre, pd.DataFrame):
+        all_facs[all_facs["type"] == "rec"].plot(ax = ax, markersize=35, 
+        color = "green", marker = "s", label = "Recycling centre")
     
-    links_gp.plot(ax =ax, alpha = 0.5, color='green')
+    links_gp.plot(ax =ax, alpha = 0.5, color='brown', linestyle = "--")
     plt.legend(prop = {'size': 10}, loc = "lower right")
 
     return None
+
+def create_gis_rec(r_centre, u_jk):
+
+    # Load results data into a single dataframe
+    results_df = r_centre
+
+    # Get the Recycling centres and links information
+    u_jk = u_jk.rename(columns= {"rec": "fac", "lat_rec": "lat_fac", 
+                                "long_rec": "long_fac"})
+    u_jk["type"] = "rec"
+    links_df = u_jk
+
+    # Geopandas visualization
+    shape_files = os.path.join(os.getcwd(), "Shapefiles")
+
+    # Municipalities shapefiles
+    mun = gp.read_file(os.path.join(shape_files, "ersucconc.shp"))
+    topo = gp.read_file(os.path.join(shape_files, "ersucconc_topo.shp"))
+    topo = topo.sort_values(by = "ORD_COD")
+    topo["municipality"] = muns
+
+    # Get all facilities geometries from shapefiles and convert to GeoDataFrame
+    all_facs = pd.merge(results_df, topo, left_on="mun", 
+    right_on = "municipality", how = "inner")
+    all_facs = gp.GeoDataFrame(all_facs)
+
+    # Get all links points
+    links_tmp2 = pd.merge(links_df, topo, left_on="mun", 
+    right_on="municipality")
+    links_tmp2 = pd.merge(links_tmp2, topo, left_on="fac", 
+    right_on = "municipality")
+
+    # Create a list that contains the linestrings for all link ends
+    links_list = []
+
+    for i in range(0, links_tmp2.shape[0]):
+        links_list.append(
+            LineString(
+                [Point(links_tmp2.X_COORD_x[i], links_tmp2.Y_COORD_x[i]), 
+                Point(links_tmp2.X_COORD_y[i], links_tmp2.Y_COORD_y[i])]))
+
+    n = u_jk.shape[0]
+
+    links_gp = gp.GeoDataFrame(list(range(0, n)), geometry = links_list)
+
+    # Display geopandas plot
+    fig, ax = plt.subplots(figsize = (10,10))
+    mun.plot(ax =ax, alpha=0.5, edgecolor='k')
+    topo.plot(ax = ax, markersize=10, color = "black", marker = "o", 
+    label = "Municipalities")
+
+    all_facs[all_facs["type"] == "rec"].plot(ax = ax, markersize=35, 
+            color = "green", marker = "s", label = "Recycling centre")
+    
+    links_gp.plot(ax =ax, alpha = 0.5, color='brown', linestyle = "--")
+    plt.legend(prop = {'size': 10}, loc = "lower right")
+
+    return None
+
 
