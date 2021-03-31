@@ -6,7 +6,7 @@ Requirements:
 - Python (3.5 or greater)
 - Jupyter Notebook
 - Pyomo
-- Internet connection for calling the NEOS server
+- FICO Xpress (or internet connection for calling the NEOS server as an alternate option)
 
 Python libraries:
 - folium
