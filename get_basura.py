@@ -556,10 +556,10 @@ def create_gis(ts_new, ts_exist, inc, w_jk, v_jl, r_centre = None, u_jk = None):
     links_gp.plot(ax =ax, alpha = 0.5, color='brown', linestyle = "--")
 
     for x, y, label in zip(topo_no_issues.geometry.x, topo_no_issues.geometry.y, topo_no_issues.municipality):
-        ax.annotate(label, xy=(x, y), xytext=(6, -7), textcoords="offset points", fontsize=7.5)
+        ax.annotate(label, xy=(x, y), xytext=(4, -7), textcoords="offset points", fontsize=7.5)
 
     for x, y, label in zip(topo_issues.geometry.x, topo_issues.geometry.y, topo_issues.municipality):
-        ax.annotate(label, xy=(x, y), xytext=(6, -1), textcoords="offset points", fontsize=7.5)
+        ax.annotate(label, xy=(x, y), xytext=(6, 0), textcoords="offset points", fontsize=7.5)
 
     plt.legend(prop = {'size': 10}, loc = "lower right")
 
@@ -625,10 +625,10 @@ def create_gis_rec(r_centre, u_jk):
     links_gp.plot(ax =ax, alpha = 0.5, color='brown', linestyle = "--")
 
     for x, y, label in zip(topo_no_issues.geometry.x, topo_no_issues.geometry.y, topo_no_issues.municipality):
-        ax.annotate(label, xy=(x, y), xytext=(6, -7), textcoords="offset points", fontsize=7.5)
+        ax.annotate(label, xy=(x, y), xytext=(4, -7), textcoords="offset points", fontsize=7.5)
 
     for x, y, label in zip(topo_issues.geometry.x, topo_issues.geometry.y, topo_issues.municipality):
-        ax.annotate(label, xy=(x, y), xytext=(6, -1), textcoords="offset points", fontsize=7.5)
+        ax.annotate(label, xy=(x, y), xytext=(6, 0), textcoords="offset points", fontsize=7.5)
 
     plt.legend(prop = {'size': 10}, loc = "lower right")
 
