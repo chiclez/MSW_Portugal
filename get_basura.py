@@ -146,6 +146,10 @@ def get_new_data(demax, dlmax, drmax):
     recycling_mat = ["Paper", "Plastic", "Metals", "Glass", "Wood"]
     q_r_max_init = data_2019[recycling_mat].T
 
+    # Population
+    pop_2019_list = data_2019[["Pop_2019"]].squeeze().to_list()
+    pop_2019_product = [(i*j/(10**7)) for i in pop_2019_list for j in pop_2019_list]
+
     # Distance matrices
     distmatrix1 = distance_jk_sheet.copy()
     d_jk_d_jl_init = distmatrix1.drop(columns = ["Unnamed: 0"])
@@ -294,10 +298,13 @@ def get_new_data(demax, dlmax, drmax):
     g_jk_dict = dict(zip(base_keys, g_jk_list))
     d_jk_tri_dict = dict(zip(base_keys, d_jk_tri_list))
     d_jk_bin_dict = dict(zip(base_keys, d_jk_bin_list))
+
+    # Population product
+    pop_2019_dict = dict(zip(base_keys, pop_2019_product))
     
     new_basura = [q_j_dict, q_r_dict, q_r_max_dict, d_jk_d_jl_dict, d_kl_dict, 
                     w_jk0_dict, f_jk_f_jl_dict, g_kl_dict, g_jk_dict, 
-                    d_jk_tri_dict, d_jk_bin_dict]
+                    d_jk_tri_dict, d_jk_bin_dict, pop_2019_dict]
 
     return new_basura
 
