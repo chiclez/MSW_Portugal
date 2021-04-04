@@ -9,7 +9,6 @@ Requirements:
 - FICO Xpress (or internet connection for calling the NEOS server as an alternate option, though a minor code change is required)
 
 Python libraries:
-- folium
 - geopandas
 - numpy
 - os

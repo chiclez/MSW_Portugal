@@ -4,18 +4,16 @@ import numpy as np
 
 # Plotting libraries
 import matplotlib.pyplot as plt
-import seaborn as sns
 import folium
 import geopandas as gp
 from shapely.geometry import Point, Polygon, LineString
 
 # Misc libraries
 import os
-from pyomo.environ import *
 
 # Key takeaways
 
-# Get yourself in the data directory
+# Data directory
 data_dir = os.path.join(os.getcwd(), "data")
 
 # All municipalities in normal case
@@ -136,13 +134,6 @@ def get_new_data(demax, dlmax, drmax):
     # Total recyclable for 2019
     q_r_init = data_2019[["q_r"]]
 
-    # Recycling materials
-    # q_paper_init = data_2019[["Paper"]]
-    # q_plastic_init = data_2019[["Plastic"]]
-    # q_metals_init = data_2019[["Metals"]]
-    # q_glass_init = data_2019[["Glass"]]
-    # q_wood_init = data_2019[["Wood"]]
-
     recycling_mat = ["Paper", "Plastic", "Metals", "Glass", "Wood"]
     q_r_max_init = data_2019[recycling_mat].T
 
@@ -203,11 +194,6 @@ def get_new_data(demax, dlmax, drmax):
     # Create temp dictionaries
     q_j_init_dict = q_j_init.to_dict(orient = "list")
     q_r_init_dict = q_r_init.to_dict(orient = "list")
-    # q_paper_init_dict = q_paper_init.to_dict(orient = "list")
-    # q_plastic_init_dict = q_plastic_init.to_dict(orient = "list")
-    # q_metals_init_dict = q_metals_init.to_dict(orient = "list")
-    # q_glass_init_dict = q_glass_init.to_dict(orient = "list")    
-    # q_wood_init_dict = q_wood_init.to_dict(orient = "list")
 
     q_r_max_init_dict = q_r_max_init.to_dict(orient = "list")
 
@@ -231,21 +217,6 @@ def get_new_data(demax, dlmax, drmax):
 
     q_r = [value for key, value in q_r_init_dict.items()]
     q_r_list = [j for i in q_r for j in i]
-
-    # q_paper = [value for key, value in q_paper_init_dict.items()]
-    # q_paper_list = [j for i in q_paper for j in i]
-
-    #q_plastic = [value for key, value in q_plastic_init_dict.items()]
-    # q_plastic_list = [j for i in q_plastic for j in i]
-
-    # q_metals = [value for key, value in q_metals_init_dict.items()]
-    # q_metals_list = [j for i in q_metals for j in i]
-
-    # q_glass = [value for key, value in q_glass_init_dict.items()]
-    # q_glass_list = [j for i in q_glass for j in i]
-
-    # q_wood = [value for key, value in q_wood_init_dict.items()]
-    # q_wood_list = [j for i in q_wood for j in i]
 
     q_r_max = [value for key, value in q_r_max_init_dict.items()]
     q_r_max_list = [j for i in q_r_max for j in i]
@@ -279,12 +250,6 @@ def get_new_data(demax, dlmax, drmax):
     # Waste
     q_j_dict = dict(zip(muns, q_j_list))
     q_r_dict = dict(zip(muns, q_r_list))
-
-    #q_paper_dict = dict(zip(muns, q_paper_list))
-    #q_plastic_dict = dict(zip(muns, q_plastic_list))
-    #q_metals_dict = dict(zip(muns, q_metals_list))
-    #q_glass_dict = dict(zip(muns, q_glass_list))
-    #q_bio_dict = dict(zip(muns, q_bio_list))
 
     # q_jr
     q_r_max_dict = dict(zip(recycling_keys, q_r_max_list))
